@@ -1,0 +1,57 @@
+version: '3.9'
+
+
+services:
+
+  pgdock:
+    image: 'postgres:14.2'
+    restart: always
+    ports:
+      - "5431:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      # POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: users
+    volumes:
+      - /Users/ananto/Sandbox/godock/db-data/postgres/:/var/lib/postgresql/data/
+    networks:
+      - godocknet
+
+  godock:
+    build:
+      context: ./../godock
+      dockerfile: Dockerfile
+    image: aysf/goserv
+    ports:
+      - 3000:3000
+    depends_on:
+      - pgdock
+    restart: on-failure:10
+    networks:
+      - godocknet
+    deploy:
+      mode: replicated
+      replicas: 3
+      placement: 
+        max_replicas_per_node: 1
+    environment:
+      - DSN=postgres://postgres:password@pgdock:5432/users?sslmode=disable
+
+  # test:
+  #   build:
+  #     context: /Users/ananto/Sandbox/gomock
+  #     dockerfile: Dockerfile
+  #   image: aysf/gomock:1.0
+  #   depends_on:
+  #     - godock
+  #   deploy:
+  #     mode: replicated-job
+  #   networks:
+  #     - godocknet
+
+
+
+networks:
+  godocknet:
+    name: gonet

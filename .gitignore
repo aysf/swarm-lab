@@ -1,0 +1,4 @@
+.vagrant
+db-data
+worker.token
+manager.token
